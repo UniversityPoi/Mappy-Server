@@ -2,6 +2,7 @@ using Mappy.Configurations.Models;
 using Mappy.Helpers;
 using Mappy.Models;
 using Mappy.Models.Requests;
+using Mappy.Models.Responses;
 using Mappy.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -14,51 +15,63 @@ namespace Mappy.Controllers;
 [Route("auth")]
 public class AuthenticationController : ControllerBase
 {
-    private readonly IConfiguration _configuration;
-    private readonly UserService _userService;
-    private readonly JwtConfigurationModel _jwtBearerTokenSettings;
-
-    public AuthenticationController(IOptions<JwtConfigurationModel> jwtTokenOptions,
-        IConfiguration configuration, UserService userService)
-    {
-        _configuration = configuration;
-        _userService = userService;
-        _jwtBearerTokenSettings = jwtTokenOptions.Value;
-    }
+  //=============================================================================================
+  private readonly IConfiguration _configuration;
+  private readonly UserService _userService;
+  private readonly JwtConfigurationModel _jwtBearerTokenSettings;
 
 
-    [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] RegisterUserModel userModel)
-    {
-        if (!ModelState.IsValid)
-        {
-            return new BadRequestObjectResult(new { Message = "User Registration Failed" });
-        }
-
-        if (!userModel.Password.Equals(userModel.ConfirmPassword))
-        {
-            return new BadRequestObjectResult(new { Message = "Passwords do not match!" });
-        }
-
-        if (!_userService.CreateUser(userModel))
-        {
-            return new BadRequestObjectResult(new { Message = "User Registration Failed" });
-        }
-
-        return Ok(new { Message = "User Registration Successful" });
-    }
+  //=============================================================================================
+  public AuthenticationController(IOptions<JwtConfigurationModel> jwtTokenOptions,
+      IConfiguration configuration, UserService userService)
+  {
+      _configuration = configuration;
+      _userService = userService;
+      _jwtBearerTokenSettings = jwtTokenOptions.Value;
+  }
 
 
-    [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] LoginUserModel userModel)
-    {
-        if (!ModelState.IsValid  || !_userService.DoesUserExist(userModel))
-        {
-            return new BadRequestObjectResult(new { Message = "Login failed" });
-        }
 
-        var token = AuthenticationHelper.GenerateToken(userModel, _jwtBearerTokenSettings);
+  //=============================================================================================
+  [HttpPost("register")]
+  public async Task<IActionResult> Register([FromBody] RegisterUserModel model)
+  {
+      if (!model.Password.Equals(model.ConfirmPassword))
+      {
+          return new BadRequestObjectResult(new { Message = "Passwords do not match!" });
+      }
 
-        return Ok(new { Token = token, Message = "Success" });
-    }
+      var result = await _userService.RegisterUser(model);
+
+      if (!result.IsSuccessful)
+      {
+          return new BadRequestObjectResult(new { Message = result.Message });
+      }
+
+      return Ok(new { Message = "User Registration Successful" });
+  }
+
+
+  //=============================================================================================
+  [HttpPost("login")]
+  public async Task<IActionResult> Login([FromBody] LoginUserModel model)
+  {
+      var result = await _userService.LoginUser(model);
+
+      if (!result.IsSuccessful)
+      {
+          return new BadRequestObjectResult(new { Message = result.Message });
+      }
+
+      var user = result.Data as SecureUserModel;
+
+      if (user != null)
+      {
+          var token = AuthenticationHelper.GenerateToken(user, _jwtBearerTokenSettings);
+
+          return Ok(new { Token = token, Message = "Success", User = user });
+      }
+
+      return new BadRequestObjectResult(new { Message = "Something went wrong..." });
+  }
 }

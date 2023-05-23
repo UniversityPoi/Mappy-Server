@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
-using Mappy.Models;
+using Mappy.Models.Responses;
 using Mappy.Services;
 using Microsoft.AspNetCore.Authorization;
 
@@ -12,20 +12,31 @@ namespace Mappy.Controllers;
 [Route("[controller]")]
 public class UserController : ControllerBase
 {
-    private readonly UserService _userService;
+  //=============================================================================================
+  private readonly UserService _userService;
 
-    public UserController(UserService userService)
+
+  //=============================================================================================
+  public UserController(UserService userService)
+  {
+      _userService = userService;
+  }
+
+
+
+  //=============================================================================================
+  [HttpGet("{id}")]
+  public async Task<IActionResult> GetUserById(Guid id)
+  {
+    var result = await _userService.GetUserById(id.ToString());
+
+    if (!result.IsSuccessful)
     {
-        _userService = userService;
+      return NotFound(new { message = result.Message });
     }
-
-    [HttpGet("username")]
-    public IActionResult GetUsername()
+    else
     {
-        var email = User.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.Email)?.Value;
-
-        Console.WriteLine(email);
-
-        return Ok();
+      return Ok(result.Data);
     }
+  }
 }
