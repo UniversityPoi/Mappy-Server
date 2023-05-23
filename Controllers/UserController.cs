@@ -25,10 +25,17 @@ public class UserController : ControllerBase
 
 
   //=============================================================================================
-  [HttpGet("{id}")]
-  public async Task<IActionResult> GetUserById(Guid id)
+  [HttpGet("")]
+  public async Task<IActionResult> GetUserById()
   {
-    var result = await _userService.GetUserById(id.ToString());
+    var id = User.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.UserData)?.Value;
+
+    if (id == null)
+    {
+      return BadRequest(new { message = "Cannot get the Id of the user..." });
+    }
+
+    var result = await _userService.GetUserById(id);
 
     if (!result.IsSuccessful)
     {
