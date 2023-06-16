@@ -12,6 +12,8 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 builder.Services.AddSingleton<UserService>();
+builder.Services.AddSingleton<LocationService>();
+builder.Services.AddSingleton<FavoriteLocationService>();
 
 // JWT Configuration
 builder.Services.AddJwt(builder.Configuration);
