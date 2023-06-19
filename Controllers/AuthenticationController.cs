@@ -25,9 +25,9 @@ public class AuthenticationController : ControllerBase
   public AuthenticationController(IOptions<JwtConfigurationModel> jwtTokenOptions,
       IConfiguration configuration, UserService userService)
   {
-      _configuration = configuration;
-      _userService = userService;
-      _jwtBearerTokenSettings = jwtTokenOptions.Value;
+    _configuration = configuration;
+    _userService = userService;
+    _jwtBearerTokenSettings = jwtTokenOptions.Value;
   }
 
 
@@ -36,19 +36,19 @@ public class AuthenticationController : ControllerBase
   [HttpPost("register")]
   public async Task<IActionResult> Register([FromBody] RegisterUserModel model)
   {
-      if (!model.Password.Equals(model.ConfirmPassword))
-      {
-          return new BadRequestObjectResult(new { Message = "Passwords do not match!" });
-      }
+    if (!model.Password.Equals(model.ConfirmPassword))
+    {
+      return new BadRequestObjectResult(new { Message = "Passwords do not match!" });
+    }
 
-      var result = await _userService.RegisterUser(model);
+    var result = await _userService.RegisterUser(model);
 
-      if (!result.IsSuccessful)
-      {
-          return new BadRequestObjectResult(new { Message = result.Message });
-      }
+    if (!result.IsSuccessful)
+    {
+      return new BadRequestObjectResult(new { Message = result.Message });
+    }
 
-      return Ok(new { Message = "User Registration Successful" });
+    return Ok(new { Message = "User Registration Successful" });
   }
 
 
@@ -56,22 +56,27 @@ public class AuthenticationController : ControllerBase
   [HttpPost("login")]
   public async Task<IActionResult> Login([FromBody] LoginUserModel model)
   {
-      var result = await _userService.LoginUser(model);
+    var result = await _userService.LoginUser(model);
 
-      if (!result.IsSuccessful)
+    if (!result.IsSuccessful)
+    {
+      return new BadRequestObjectResult(new { Message = result.Message });
+    }
+
+    var user = result.Data as SecureUserModel;
+
+    if (user != null)
+    {
+      var token = AuthenticationHelper.GenerateToken(user, _jwtBearerTokenSettings);
+
+      return Ok(new
       {
-          return new BadRequestObjectResult(new { Message = result.Message });
-      }
+        Token = token,
+        Message = "Success",
+        User = new { Username = user.Username, Email = user.Email }
+      });
+    }
 
-      var user = result.Data as SecureUserModel;
-
-      if (user != null)
-      {
-          var token = AuthenticationHelper.GenerateToken(user, _jwtBearerTokenSettings);
-
-          return Ok(new { Token = token, Message = "Success", User = user });
-      }
-
-      return new BadRequestObjectResult(new { Message = "Something went wrong..." });
+    return new BadRequestObjectResult(new { Message = "Something went wrong..." });
   }
 }
