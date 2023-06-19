@@ -43,7 +43,9 @@ public class UserController : ControllerBase
     }
     else
     {
-      return Ok(result.Data);
+      var user = result.Data as SecureUserModel;
+
+      return Ok(new { Username = user.Username, Email = user.Email });
     }
   }
 }
