@@ -52,7 +52,7 @@ public class FavoriteLocationController : ControllerBase
 
   //=============================================================================================
   [HttpPost("")]
-  public async Task<IActionResult> AddFavoriteLocation(Coordinates coordinates, string name)
+  public async Task<IActionResult> AddFavoriteLocation(SecureFavoriteLocationRequestModel location)
   {
     var id = User.Claims.FirstOrDefault(claim => claim.Type == ClaimTypes.UserData)?.Value;
 
@@ -64,8 +64,8 @@ public class FavoriteLocationController : ControllerBase
     var result = await _favoriteLocationService.AddFavoriteLocation(new FavoriteLocationRequestModel
     {
       UserId = new Guid(id),
-      Name = name,
-      Coordinates = coordinates
+      Name = location.Name,
+      Coordinates = location.Coordinates
     });
 
     if (!result.IsSuccessful)
