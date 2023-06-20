@@ -97,7 +97,7 @@ public class LocationController : ControllerBase
     }
     else
     {
-      return Ok(result.Data);
+      return Ok();
     }
   }
 }
