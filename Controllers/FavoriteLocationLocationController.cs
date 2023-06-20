@@ -21,7 +21,7 @@ public class FavoriteLocationController : ControllerBase
   //=============================================================================================
   public FavoriteLocationController(FavoriteLocationService favoriteLocationService)
   {
-      _favoriteLocationService = favoriteLocationService;
+    _favoriteLocationService = favoriteLocationService;
   }
 
 
@@ -71,6 +71,23 @@ public class FavoriteLocationController : ControllerBase
     if (!result.IsSuccessful)
     {
       return BadRequest(new { message = result.Message });
+    }
+    else
+    {
+      return Ok(result.Data);
+    }
+  }
+
+
+  //=============================================================================================
+  [HttpDelete("")]
+  public async Task<IActionResult> DeleteFavoriteLocationsById(Guid id)
+  {
+    var result = await _favoriteLocationService.DeleteFavoriteLocation(id);
+
+    if (!result.IsSuccessful)
+    {
+      return NotFound(new { message = result.Message });
     }
     else
     {

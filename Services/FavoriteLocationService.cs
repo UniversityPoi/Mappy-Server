@@ -77,4 +77,31 @@ public class FavoriteLocationService
 
 		return result;
   }
+
+
+	//=============================================================================================
+  public async Task<ApiResponse> DeleteFavoriteLocation(Guid id)
+  {
+    var request = new RestRequest($"api/favorite-location/{id}", Method.Delete);
+
+		var response = await _client.ExecuteAsync(request);
+
+
+		var result = new ApiResponse();
+
+		switch (response.StatusCode)
+		{
+			case HttpStatusCode.OK:
+				result.Data = JsonConvert.DeserializeObject<FavoriteLocation>(response.Content ?? "");
+				result.IsSuccessful = true;
+				break;
+			case HttpStatusCode.NotFound:
+				dynamic? responseObj = JsonConvert.DeserializeObject(response.Content ?? "");
+				result.Message = responseObj?.message ?? "Failed to delete favorite location!";
+				break;
+			default: break;
+		}
+
+		return result;
+  }
 }
