@@ -80,7 +80,7 @@ public class FavoriteLocationController : ControllerBase
 
 
   //=============================================================================================
-  [HttpDelete("")]
+  [HttpDelete("{id}")]
   public async Task<IActionResult> DeleteFavoriteLocationsById(Guid id)
   {
     var result = await _favoriteLocationService.DeleteFavoriteLocation(id);
